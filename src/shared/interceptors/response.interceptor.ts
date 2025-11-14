@@ -20,9 +20,7 @@ export class ResponseInterceptor implements NestInterceptor {
 					return data.toJSON();
 				}
 
-				throw new BadRequestException({
-					message: 'Response must be wrapped in ResponseMapper',
-				});
+				return data;
 			}),
 		);
 	}
