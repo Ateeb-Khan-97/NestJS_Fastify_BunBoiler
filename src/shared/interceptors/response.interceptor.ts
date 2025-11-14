@@ -1,10 +1,4 @@
-import {
-	BadRequestException,
-	Injectable,
-	type CallHandler,
-	type ExecutionContext,
-	type NestInterceptor,
-} from '@nestjs/common';
+import { Injectable, type CallHandler, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
 import { map, type Observable } from 'rxjs';
 import { ResponseMapper } from '../mappers/response.map';
 
