@@ -18,4 +18,12 @@ export abstract class SigninDto {
 	password: string;
 }
 
-export abstract class SignupDto extends SigninDto {}
+export abstract class SignupDto extends SigninDto {
+	@ApiProperty({
+		example: 'John Doe',
+		description: 'Full name of the user',
+	})
+	@IsString()
+	@Length(2, 30)
+	fullName: string;
+}
