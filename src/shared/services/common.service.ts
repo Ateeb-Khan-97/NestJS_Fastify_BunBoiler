@@ -7,7 +7,7 @@ export class CommonService {
 	 * @param pms Promise you want to resolve safely
 	 * @returns a tuple with first value to be error if promise fails else null, second value to be resolved promise or null
 	 */
-	public async promise<T>(pms: Promise<T>) {
+	public async promise<T>(pms: Promise<T>): Promise<readonly [Error | null, T | null]> {
 		try {
 			return [null, await pms] as const;
 		} catch (error) {
@@ -15,7 +15,12 @@ export class CommonService {
 		}
 	}
 
-	public isEmptyObject(obj: Record<string | number | symbol, unknown>) {
+	/**
+	 * Checks if an object is empty (has no own properties)
+	 * @param obj The object to check
+	 * @returns true if the object is empty, false otherwise
+	 */
+	public isEmptyObject(obj: Record<string | number | symbol, unknown>): boolean {
 		return Object.keys(obj).length === 0;
 	}
 
@@ -37,7 +42,7 @@ export class CommonService {
 	 * Generates UUID v7
 	 * @returns a string of uuid v7
 	 */
-	public uuid() {
+	public uuid(): string {
 		return Bun.randomUUIDv7();
 	}
 
@@ -46,7 +51,7 @@ export class CommonService {
 	 * @param ms time to sleep in seconds
 	 * @returns promise resolve after ms
 	 */
-	public sleep(ms = 1000) {
+	public sleep(ms = 1000): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 }
