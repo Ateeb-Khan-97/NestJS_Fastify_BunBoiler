@@ -19,9 +19,10 @@ export const SwaggerConfig = new DocumentBuilder()
 	.build();
 
 export const ScalarConfig = (document: OpenAPIObject): NestJSReferenceConfiguration => ({
-	theme: 'saturn',
+	theme: 'fastify',
 	layout: 'modern',
 	content: document,
+	showToolbar: 'never',
 	hideModels: true,
 	documentDownloadType: 'none',
 	hideDarkModeToggle: true,
