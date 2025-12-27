@@ -2,9 +2,8 @@ import os from 'node:os';
 import cluster from 'node:cluster';
 import { Logger, type INestApplication } from '@nestjs/common';
 import { isProduction } from './config/env.config';
-import type { FastifyAdapter } from '@nestjs/platform-fastify';
 
-export async function RunCluster(bootstrap: () => Promise<INestApplication<FastifyAdapter>>) {
+export async function RunCluster(bootstrap: () => Promise<INestApplication>) {
 	console.clear();
 	const logger = new Logger('AppCluster');
 	const numCPUs = Math.max(1, os.cpus().length - 1);

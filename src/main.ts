@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe, type INestApplication } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './shared/filters/exception.filter';
@@ -8,12 +8,15 @@ import { env, isProduction } from './config/env.config';
 import { SwaggerModule } from '@nestjs/swagger';
 import { ScalarConfig, SwaggerConfig } from './config/swagger.config';
 import { apiReference } from '@scalar/nestjs-api-reference';
-import { FastifyAdapter } from '@nestjs/platform-fastify';
+import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import { RunCluster } from './main.cluster';
+import fastifyCookie from '@fastify/cookie';
 
 async function bootstrap() {
 	const logger = new Logger('NestFactory');
-	const app = await NestFactory.create<INestApplication<FastifyAdapter>>(AppModule, new FastifyAdapter());
+	const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+
+	app.register(fastifyCookie, { secret: env.COOKIE_SECRET });
 
 	app.enableCors();
 	app.useGlobalPipes(new ValidationPipe());

@@ -18,6 +18,7 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
+		"@fastify/cookie": "^11.0.2",
 		"@nestjs/axios": "^4.0.1",
 		"@nestjs/common": "^11.1.9",
 		"@nestjs/core": "^11.1.9",

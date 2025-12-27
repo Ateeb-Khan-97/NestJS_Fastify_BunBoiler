@@ -53,6 +53,10 @@ export class AuthService {
 		return type === 'Bearer' ? token : undefined;
 	}
 
+	public extractTokenFromCookie(request: FastifyRequest, type: TokenType): string | undefined {
+		return request.cookies[type];
+	}
+
 	public async revokeToken(token: string): Promise<void> {
 		const payload = await this.jwtService.decode(token);
 		if (payload?.tokenId) this.addBlockedToken(payload.tokenId);

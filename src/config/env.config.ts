@@ -8,6 +8,7 @@ const envSchema = z.object({
 	JWT_REFRESH_SECRET: z.string(),
 	JWT_ACCESS_EXP: z.coerce.number(),
 	JWT_REFRESH_EXP: z.coerce.number(),
+	COOKIE_SECRET: z.string(),
 });
 
 export const env = (() => {
