@@ -48,7 +48,7 @@ export class AuthService {
 		}
 	}
 
-	public extractTokenFromHeader(request: FastifyRequest): string | undefined {
+	public extractAccessTokenFromHeader(request: FastifyRequest): string | undefined {
 		const [type, token] = request.headers.authorization?.split(' ') ?? [];
 		return type === 'Bearer' ? token : undefined;
 	}

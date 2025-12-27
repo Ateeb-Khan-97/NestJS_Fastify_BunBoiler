@@ -88,7 +88,7 @@ export class AuthController {
 	@ApiBearerAuth('access-token')
 	@Post('sign-out')
 	async signoutHandler(@Request() req: FastifyRequest, @Response({ passthrough: true }) res: FastifyReply) {
-		let token = this.authService.extractTokenFromHeader(req);
+		let token = this.authService.extractAccessTokenFromHeader(req);
 		if (!token) token = this.authService.extractTokenFromCookie(req, TokenType.ACCESS);
 		if (!token) throw new UnauthorizedException();
 		await this.authService.revokeToken(token);
