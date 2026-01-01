@@ -4,13 +4,13 @@ export abstract class GeneralEntity {
 	@PrimaryGeneratedColumn()
 	id: number;
 
-	@CreateDateColumn()
+	@CreateDateColumn({ type: 'timestamptz' })
 	createdAt: Date;
 
-	@UpdateDateColumn()
+	@UpdateDateColumn({ type: 'timestamptz' })
 	updatedAt: Date;
 
-	@DeleteDateColumn({ default: null })
+	@DeleteDateColumn({ default: null, type: 'timestamptz' })
 	deletedAt?: Date;
 
 	get isDeleted(): boolean {
