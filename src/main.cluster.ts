@@ -15,9 +15,15 @@ export async function RunCluster(bootstrap: () => Promise<INestApplication>) {
 		for (let i = 0; i < numCPUs; i++) cluster.fork();
 
 		let restartCount = 0;
+		const restartWindowMs = 60000; // 1 minute
+
 		cluster.on('exit', (worker, code, signal) => {
 			logger.error(`Worker ${worker.process.pid} died (code: ${code}, signal: ${signal}).`);
 			restartCount++;
+
+			setTimeout(() => {
+				restartCount = Math.max(0, restartCount - 1);
+			}, restartWindowMs);
 
 			if (restartCount > 10) {
 				logger.error('Too many worker restarts, shutting down master.');
