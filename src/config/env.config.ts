@@ -9,6 +9,9 @@ const envSchema = z.object({
 	JWT_ACCESS_EXP: z.coerce.number(),
 	JWT_REFRESH_EXP: z.coerce.number(),
 	COOKIE_SECRET: z.string(),
+	SWAGGER_TITLE: z.string().default('Nest.JS API Documentation'),
+	SWAGGER_DESCRIPTION: z.string().default('API description'),
+	SWAGGER_VERSION: z.string().default('1.0'),
 });
 
 export const env = (() => {

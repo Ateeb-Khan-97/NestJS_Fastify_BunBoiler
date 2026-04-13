@@ -1,10 +1,11 @@
 import { DocumentBuilder, type OpenAPIObject } from '@nestjs/swagger';
 import type { NestJSReferenceConfiguration } from '@scalar/nestjs-api-reference';
+import { env } from './env.config';
 
 export const SwaggerConfig = new DocumentBuilder()
-	.setTitle('API Documentation')
-	.setDescription('API description')
-	.setVersion('1.0')
+	.setTitle(env.SWAGGER_TITLE)
+	.setDescription(env.SWAGGER_DESCRIPTION)
+	.setVersion(env.SWAGGER_VERSION)
 	.addBearerAuth(
 		{
 			description: `Please enter token in following format: Bearer <JWT>`,
@@ -19,7 +20,7 @@ export const SwaggerConfig = new DocumentBuilder()
 	.build();
 
 export const ScalarConfig = (document: OpenAPIObject): NestJSReferenceConfiguration => ({
-	theme: 'fastify',
+	theme: 'saturn',
 	layout: 'modern',
 	content: document,
 	showToolbar: 'never',
@@ -28,5 +29,5 @@ export const ScalarConfig = (document: OpenAPIObject): NestJSReferenceConfigurat
 	hideDarkModeToggle: true,
 	hideDownloadButton: true,
 	withFastify: true,
-	pageTitle: 'Nest.JS API Documentation',
+	pageTitle: env.SWAGGER_TITLE,
 });

@@ -32,6 +32,7 @@ export class UserService {
 
 	async softDelete(user: UserEntity) {
 		user.deletedAt = new Date();
+		user.email = `${user.email}-${user.id}-deleted`;
 		return this.userRepo.save(user);
 	}
 

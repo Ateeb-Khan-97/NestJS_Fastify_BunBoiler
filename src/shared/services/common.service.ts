@@ -42,7 +42,7 @@ export class CommonService {
 	 * Generates UUID v7
 	 * @returns a string of uuid v7
 	 */
-	public uuid(): string {
+	public get uuid(): string {
 		return Bun.randomUUIDv7();
 	}
 
