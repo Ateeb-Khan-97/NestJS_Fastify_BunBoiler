@@ -12,6 +12,7 @@ const envSchema = z.object({
 	SWAGGER_TITLE: z.string().default('Nest.JS API Documentation'),
 	SWAGGER_DESCRIPTION: z.string().default('API description'),
 	SWAGGER_VERSION: z.string().default('1.0'),
+	REDIS_URL: z.url().optional(),
 });
 
 export const env = (() => {
