@@ -4,7 +4,6 @@ import { Logger, type INestApplication } from '@nestjs/common';
 import { isProduction } from './config/env.config';
 
 export async function RunCluster(bootstrap: () => Promise<INestApplication>) {
-	console.clear();
 	const logger = new Logger('AppCluster');
 	const numCPUs = Math.max(1, os.cpus().length - 1);
 

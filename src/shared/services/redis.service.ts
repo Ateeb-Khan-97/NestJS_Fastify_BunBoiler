@@ -22,8 +22,8 @@ export class RedisService implements OnModuleInit {
 				this.logger.log('Redis connected');
 				this.isConnected = true;
 			})
-			.catch((err) => {
-				this.logger.error('Redis connection failed', err);
+			.catch((err: Error) => {
+				this.logger.error('Redis connection failed', err.message);
 			});
 	}
 

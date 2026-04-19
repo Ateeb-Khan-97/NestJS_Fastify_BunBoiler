@@ -15,7 +15,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 				synchronize: !isProduction,
 				logging: !isProduction,
 				entities: [`${__dirname}/../**/*.entity{.ts,.js}`],
-				ssl: isProduction ? { rejectUnauthorized: false } : false,
+				ssl: env.PG_SSL === 'true' ? { rejectUnauthorized: true } : false,
 			}),
 		}),
 	],
