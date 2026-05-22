@@ -1,11 +1,15 @@
 import { DRIZZLE, type DrizzleDB } from '@/database/drizzle.provider';
 import { type NewUser, type User, users } from '@/database/schema';
+import { CommonService } from '@/shared/services/common.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
 
 @Injectable()
 export class UserService {
-	constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
+	constructor(
+		@Inject(DRIZZLE) private readonly db: DrizzleDB,
+		private readonly commonService: CommonService,
+	) {}
 
 	private buildWhere(where: Partial<User>) {
 		const conditions = (Object.keys(where) as (keyof User)[])
@@ -30,8 +34,8 @@ export class UserService {
 	async save(user: Partial<User>) {
 		try {
 			if (user.id) {
-				const { id, createdAt, updatedAt, ...changes } = user;
-				const [updated] = await this.db.update(users).set(changes).where(eq(users.id, id)).returning();
+				const changes = this.commonService.omit(user, ['id', 'createdAt', 'updatedAt']);
+				const [updated] = await this.db.update(users).set(changes).where(eq(users.id, user.id)).returning();
 				return [null, updated] as const;
 			}
 
