@@ -13,7 +13,6 @@ const optionalRequirePackages = [
 	'@fastify/view',
 	'@nestjs/sequelize',
 	'@nestjs/mongoose',
-	'@nestjs/typeorm',
 	'@mikro-orm/core',
 ];
 

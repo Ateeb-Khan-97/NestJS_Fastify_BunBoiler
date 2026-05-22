@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { DRIZZLE, type DrizzleDB } from '@/database/drizzle.provider';
+import { Inject, Injectable } from '@nestjs/common';
 import { HealthIndicatorService, type HealthIndicatorResult } from '@nestjs/terminus';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { sql } from 'drizzle-orm';
 
 @Injectable()
 export class DatabaseHealthIndicator extends HealthIndicatorService {
 	constructor(
-		@InjectDataSource()
-		private dataSource: DataSource,
+		@Inject(DRIZZLE)
+		private readonly db: DrizzleDB,
 	) {
 		super();
 	}
@@ -15,11 +15,11 @@ export class DatabaseHealthIndicator extends HealthIndicatorService {
 	async isHealthy(key: string): Promise<HealthIndicatorResult> {
 		const indicator = this.check(key);
 		try {
-			await this.dataSource.query('SELECT 1');
+			await this.db.execute(sql`SELECT 1`);
 
 			return indicator.up({
 				database: 'connected',
-				connection: this.dataSource.isInitialized,
+				connection: true,
 			});
 		} catch (error) {
 			return indicator.down({

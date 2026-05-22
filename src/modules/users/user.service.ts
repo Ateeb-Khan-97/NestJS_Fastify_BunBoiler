@@ -1,42 +1,64 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from './entities/user.entity';
-import type { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
+import { DRIZZLE, type DrizzleDB } from '@/database/drizzle.provider';
+import { type NewUser, type User, users } from '@/database/schema';
+import { Inject, Injectable } from '@nestjs/common';
+import { and, eq, isNull } from 'drizzle-orm';
 
 @Injectable()
 export class UserService {
-	constructor(
-		@InjectRepository(UserEntity)
-		private readonly userRepo: Repository<UserEntity>,
-	) {}
+	constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-	async findOneBy(where: FindOptionsWhere<UserEntity>) {
-		return this.userRepo.findOne({ where });
+	/** Build an equality filter from the given fields, always excluding soft-deleted rows. */
+	private buildWhere(where: Partial<User>) {
+		const conditions = (Object.keys(where) as (keyof User)[])
+			.filter((key) => where[key] !== undefined)
+			.map((key) => eq(users[key], where[key] as never));
+		return and(...conditions, isNull(users.deletedAt));
 	}
 
-	async findBy(where: FindOptionsWhere<UserEntity>) {
-		return this.userRepo.find({ where });
+	async findOneBy(where: Partial<User>): Promise<User | null> {
+		const [user] = await this.db.select().from(users).where(this.buildWhere(where)).limit(1);
+		return user ?? null;
 	}
 
-	create(user: DeepPartial<UserEntity>) {
-		return this.userRepo.create(user);
+	async findBy(where: Partial<User>): Promise<User[]> {
+		return this.db.select().from(users).where(this.buildWhere(where));
 	}
 
-	async save(user: UserEntity) {
+	/** Mirrors TypeORM's `create`: returns an unsaved record to be passed to `save`. */
+	create(user: Partial<NewUser>): NewUser {
+		return user as NewUser;
+	}
+
+	/** Upserts: updates when an `id` is present, otherwise inserts. */
+	async save(user: Partial<User>) {
 		try {
-			return [null, await this.userRepo.save(user)] as const;
+			if (user.id) {
+				const { id, createdAt, updatedAt, ...changes } = user;
+				const [updated] = await this.db.update(users).set(changes).where(eq(users.id, id)).returning();
+				return [null, updated] as const;
+			}
+
+			const [created] = await this.db
+				.insert(users)
+				.values(user as NewUser)
+				.returning();
+			return [null, created] as const;
 		} catch (error) {
 			return [error as Error, null] as const;
 		}
 	}
 
-	async softDelete(user: UserEntity) {
-		user.deletedAt = new Date();
-		user.email = `${user.email}-${user.id}-deleted`;
-		return this.userRepo.save(user);
+	async softDelete(user: User) {
+		const [deleted] = await this.db
+			.update(users)
+			.set({ deletedAt: new Date(), email: `${user.email}-${user.id}-deleted` })
+			.where(eq(users.id, user.id))
+			.returning();
+		return deleted;
 	}
 
-	async remove(user: UserEntity) {
-		return this.userRepo.remove(user);
+	async remove(user: User) {
+		const [removed] = await this.db.delete(users).where(eq(users.id, user.id)).returning();
+		return removed;
 	}
 }
