@@ -34,7 +34,7 @@ const result = await build({
 if (!result.success) {
 	console.log(result.logs[0]);
 	process.exit(1);
-}
+}	
 
 await $`bun build --compile --minify-whitespace --minify-syntax --target bun --outfile dist/server dist/main.js`
 await $`rm -rf dist/main.js`

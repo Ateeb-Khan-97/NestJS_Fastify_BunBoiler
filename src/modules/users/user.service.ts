@@ -7,7 +7,6 @@ import { and, eq, isNull } from 'drizzle-orm';
 export class UserService {
 	constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-	/** Build an equality filter from the given fields, always excluding soft-deleted rows. */
 	private buildWhere(where: Partial<User>) {
 		const conditions = (Object.keys(where) as (keyof User)[])
 			.filter((key) => where[key] !== undefined)
@@ -24,12 +23,10 @@ export class UserService {
 		return this.db.select().from(users).where(this.buildWhere(where));
 	}
 
-	/** Mirrors TypeORM's `create`: returns an unsaved record to be passed to `save`. */
 	create(user: Partial<NewUser>): NewUser {
 		return user as NewUser;
 	}
 
-	/** Upserts: updates when an `id` is present, otherwise inserts. */
 	async save(user: Partial<User>) {
 		try {
 			if (user.id) {
