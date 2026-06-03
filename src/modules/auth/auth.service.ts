@@ -26,7 +26,7 @@ export class AuthService {
 		[TokenType.REFRESH]: env.JWT_REFRESH_EXP,
 	};
 
-	public async generateAuthTokens(userId: number) {
+	public async generateAuthTokens(userId: string) {
 		const tokenId = Bun.randomUUIDv7();
 		return Promise.all([
 			this.signPayload({ userId, tokenId }, TokenType.ACCESS),
@@ -34,7 +34,7 @@ export class AuthService {
 		]);
 	}
 
-	public async signPayload(payload: { userId: number; tokenId: string }, type: TokenType): Promise<string> {
+	public async signPayload(payload: { userId: string; tokenId: string }, type: TokenType): Promise<string> {
 		const options = { secret: this.JWT_SECRET[type], expiresIn: this.JWT_EXP[type] } satisfies JwtSignOptions;
 		return this.jwtService.signAsync(payload, options);
 	}
@@ -42,7 +42,7 @@ export class AuthService {
 	public async verifyToken(token: string, type: TokenType) {
 		try {
 			const options = { secret: this.JWT_SECRET[type] } satisfies JwtVerifyOptions;
-			return (await this.jwtService.verifyAsync(token, options)) as { userId: number; tokenId: string };
+			return (await this.jwtService.verifyAsync(token, options)) as { userId: string; tokenId: string };
 		} catch {
 			return undefined;
 		}

@@ -16,7 +16,7 @@ export class UserController {
 
 	@ApiBearerAuth('access-token')
 	@Get('/me')
-	public async getProfileHandler(@CurrentUser() userId: number) {
+	public async getProfileHandler(@CurrentUser() userId: string) {
 		const user = await this.userService.findOneBy({ id: userId });
 		if (!user || user.deletedAt) throw new NotFoundException('User not found');
 
@@ -26,7 +26,7 @@ export class UserController {
 
 	@ApiBearerAuth('access-token')
 	@Put('/me')
-	public async profileUpdateHandler(@CurrentUser() userId: number, @Body() body: UserUpdateDto) {
+	public async profileUpdateHandler(@CurrentUser() userId: string, @Body() body: UserUpdateDto) {
 		const user = await this.userService.findOneBy({ id: userId });
 		if (!user || user.deletedAt) throw new NotFoundException('User not found');
 

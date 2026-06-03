@@ -70,7 +70,8 @@ export class AuthController {
 		@Response({ passthrough: true }) res: FastifyReply,
 		@Body() body: RefreshAccessDto,
 	) {
-		const refreshToken = body.refreshToken || this.authService.extractTokenFromCookie(req, TokenType.REFRESH);
+		const refreshToken =
+			body?.refreshToken || this.authService.extractTokenFromCookie(req, TokenType.REFRESH);
 		if (!refreshToken) throw new UnauthorizedException();
 
 		const payload = await this.authService.verifyToken(refreshToken, TokenType.REFRESH);
