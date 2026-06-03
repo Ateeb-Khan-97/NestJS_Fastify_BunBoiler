@@ -1,48 +1,52 @@
-import { DRIZZLE, type DrizzleDB } from '@/database/drizzle.provider';
-import { type NewUser, type User, users } from '@/database/schema';
+import { PrismaService } from '@/database/prisma.service';
+import type { Prisma, User } from '@/generated/prisma/client';
 import { CommonService } from '@/shared/services/common.service';
-import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, isNull } from 'drizzle-orm';
+import { Injectable } from '@nestjs/common';
+
+export type { User };
+export type NewUser = Prisma.UserUncheckedCreateInput;
 
 @Injectable()
 export class UserService {
 	constructor(
-		@Inject(DRIZZLE) private readonly db: DrizzleDB,
+		private readonly prisma: PrismaService,
 		private readonly commonService: CommonService,
 	) {}
 
-	private buildWhere(where: Partial<User>) {
-		const conditions = (Object.keys(where) as (keyof User)[])
-			.filter((key) => where[key] !== undefined)
-			.map((key) => eq(users[key], where[key] as never));
-		return and(...conditions, isNull(users.deletedAt));
+	private buildWhere(where: Partial<User>): Prisma.UserWhereInput {
+		const conditions: Prisma.UserWhereInput = { deletedAt: null };
+		for (const key of Object.keys(where) as (keyof User)[]) {
+			if (where[key] !== undefined) {
+				(conditions as Record<string, unknown>)[key] = where[key];
+			}
+		}
+		return conditions;
 	}
 
 	async findOneBy(where: Partial<User>): Promise<User | null> {
-		const [user] = await this.db.select().from(users).where(this.buildWhere(where)).limit(1);
-		return user ?? null;
+		return this.prisma.user.findFirst({ where: this.buildWhere(where) });
 	}
 
 	async findBy(where: Partial<User>): Promise<User[]> {
-		return this.db.select().from(users).where(this.buildWhere(where));
+		return this.prisma.user.findMany({ where: this.buildWhere(where) });
 	}
 
-	create(user: Partial<NewUser>): NewUser {
-		return user as NewUser;
+	create(user: Partial<User>): Partial<User> {
+		return user;
 	}
 
 	async save(user: Partial<User>) {
 		try {
 			if (user.id) {
 				const changes = this.commonService.omit(user, ['id', 'createdAt', 'updatedAt']);
-				const [updated] = await this.db.update(users).set(changes).where(eq(users.id, user.id)).returning();
+				const updated = await this.prisma.user.update({
+					where: { id: user.id },
+					data: changes as Prisma.UserUpdateInput,
+				});
 				return [null, updated] as const;
 			}
 
-			const [created] = await this.db
-				.insert(users)
-				.values(user as NewUser)
-				.returning();
+			const created = await this.prisma.user.create({ data: user as NewUser });
 			return [null, created] as const;
 		} catch (error) {
 			return [error as Error, null] as const;
@@ -50,16 +54,13 @@ export class UserService {
 	}
 
 	async softDelete(user: User) {
-		const [deleted] = await this.db
-			.update(users)
-			.set({ deletedAt: new Date(), email: `${user.email}-${user.id}-deleted` })
-			.where(eq(users.id, user.id))
-			.returning();
-		return deleted;
+		return this.prisma.user.update({
+			where: { id: user.id },
+			data: { deletedAt: new Date(), email: `${user.email}-${user.id}-deleted` },
+		});
 	}
 
 	async remove(user: User) {
-		const [removed] = await this.db.delete(users).where(eq(users.id, user.id)).returning();
-		return removed;
+		return this.prisma.user.delete({ where: { id: user.id } });
 	}
 }

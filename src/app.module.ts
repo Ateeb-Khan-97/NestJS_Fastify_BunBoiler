@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SharedModule } from './shared/shared.module';
 import { HealthModule } from './health/health.module';
-import { DatabaseModule } from './database/database.module';
+import { PrismaModule } from './database/prisma.module';
 import { UserModule } from './modules/users/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
@@ -20,7 +20,7 @@ import { env } from './config/env.config';
 			},
 		]),
 		SharedModule,
-		DatabaseModule,
+		PrismaModule,
 		HealthModule,
 		UserModule,
 		AuthModule,

@@ -1,21 +1,17 @@
-import { DRIZZLE, type DrizzleDB } from '@/database/drizzle.provider';
-import { Inject, Injectable } from '@nestjs/common';
+import { PrismaService } from '@/database/prisma.service';
+import { Injectable } from '@nestjs/common';
 import { HealthIndicatorService, type HealthIndicatorResult } from '@nestjs/terminus';
-import { sql } from 'drizzle-orm';
 
 @Injectable()
 export class DatabaseHealthIndicator extends HealthIndicatorService {
-	constructor(
-		@Inject(DRIZZLE)
-		private readonly db: DrizzleDB,
-	) {
+	constructor(private readonly prisma: PrismaService) {
 		super();
 	}
 
 	async isHealthy(key: string): Promise<HealthIndicatorResult> {
 		const indicator = this.check(key);
 		try {
-			await this.db.execute(sql`SELECT 1`);
+			await this.prisma.$queryRaw`SELECT 1`;
 
 			return indicator.up({
 				database: 'connected',

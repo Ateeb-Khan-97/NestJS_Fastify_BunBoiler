@@ -7,7 +7,7 @@ A high-performance boilerplate application built with [NestJS](https://nestjs.co
 - **Runtime**: [Bun](https://bun.sh/) - A fast all-in-one JavaScript runtime.
 - **Framework**: [NestJS](https://nestjs.com/) (v11) - A progressive Node.js framework for building efficient, scalable Node.js server-side applications.
 - **HTTP Adapter**: [Fastify](https://www.fastify.io/) - High performance and low overhead web framework.
-- **Database**: [PostgreSQL](https://www.postgresql.org/) with [Drizzle ORM](https://orm.drizzle.team/), using [Bun's native SQL driver](https://bun.sh/docs/api/sql) (`drizzle-orm/bun-sql`) — no `pg` package needed at runtime.
+- **Database**: [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/) (v7), using the Bun-optimized `prisma-client` generator (`runtime = "bun"`, `engineType = "client"` — no Rust query engine, so `bun build --compile` keeps working) and the [`@prisma/adapter-pg`](https://www.prisma.io/docs/orm/overview/databases/postgresql) driver adapter.
 - **Authentication**: JWT-based authentication with Access and Refresh tokens.
 - **Validation**: [Zod](https://zod.dev/) and `class-validator`.
 - **Documentation**: [Swagger](https://swagger.io/) and [Scalar](https://scalar.com/) for API reference.
@@ -52,25 +52,32 @@ A high-performance boilerplate application built with [NestJS](https://nestjs.co
 
     > `db:push` and `db:migrate` connect to the database and may prompt before destructive changes, so run them in an interactive terminal (not CI/piped input).
 
-## Database (Drizzle ORM)
+## Database (Prisma ORM)
 
-Table schemas live in `src/database/schema/` (e.g. `users.ts`, with shared audit columns in `_shared.ts`). After changing a schema, generate a migration and apply it:
+The schema lives in `prisma/schema.prisma`. The Migrate/CLI connection URL is read in `prisma.config.ts` (Prisma 7 no longer allows `url` in the schema's `datasource` block); it picks up `PG_URL` from your `.env` (appending `sslmode=require` when `PG_SSL=true`). After editing the schema, regenerate the client and apply changes:
 
 ```bash
-bun run db:generate   # create a SQL migration in ./drizzle from schema changes
-bun run db:migrate    # apply pending migrations to the database
+bun run db:generate   # regenerate the typed client into src/generated/prisma
+bun run db:migrate    # create + apply a migration in ./prisma/migrations (dev)
+bun run db:deploy     # apply pending migrations (CI / production)
 bun run db:push       # alternatively, push the schema directly (handy in dev)
-bun run db:studio     # browse the database in Drizzle Studio
+bun run db:studio     # browse the database in Prisma Studio
 ```
 
-The database connection is provided app-wide via the `DRIZZLE` injection token (`src/database/drizzle.provider.ts`). Inject it into any service:
+> The generated client (`src/generated/prisma/`) is git-ignored and regenerated automatically on `bun install` via the `postinstall` script.
+
+`PrismaService` (`src/database/prisma.service.ts`) extends `PrismaClient` and is exported app-wide by the global `PrismaModule`. Inject it into any service and call Prisma methods directly:
 
 ```ts
-import { DRIZZLE, type DrizzleDB } from '@/database/drizzle.provider';
+import { PrismaService } from '@/database/prisma.service';
 
 @Injectable()
 export class SomeService {
-	constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
+	constructor(private readonly prisma: PrismaService) {}
+
+	findUsers() {
+		return this.prisma.user.findMany();
+	}
 }
 ```
 
@@ -108,10 +115,11 @@ docker-compose up -d
 - `bun start`: Starts the built application.
 - `bun run format`: Formats the code using Biome.
 - `bun run lint`: Lints the code using Biome.
-- `bun run db:generate`: Generates SQL migrations from schema changes.
-- `bun run db:migrate`: Applies pending migrations to the database.
+- `bun run db:generate`: Regenerates the typed Prisma client.
+- `bun run db:migrate`: Creates and applies a migration (dev).
+- `bun run db:deploy`: Applies pending migrations (CI / production).
 - `bun run db:push`: Pushes the schema directly to the database (dev).
-- `bun run db:studio`: Opens Drizzle Studio to browse the database.
+- `bun run db:studio`: Opens Prisma Studio to browse the database.
 
 ## API Documentation
 
