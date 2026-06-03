@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from '@/shared/decorators/public.decorator';
-import { SigninDto, SignupDto } from './dto/auth.dto';
+import { RefreshAccessDto, SigninDto, SignupDto } from './dto/auth.dto';
 import { ResponseMapper } from '@/shared/mappers/response.map';
 import { UserService } from '../users/user.service';
 import { AuthService } from './auth.service';
@@ -68,8 +68,9 @@ export class AuthController {
 	async refreshAccessHandler(
 		@Request() req: FastifyRequest,
 		@Response({ passthrough: true }) res: FastifyReply,
+		@Body() body: RefreshAccessDto,
 	) {
-		const refreshToken = this.authService.extractTokenFromCookie(req, TokenType.REFRESH);
+		const refreshToken = body.refreshToken || this.authService.extractTokenFromCookie(req, TokenType.REFRESH);
 		if (!refreshToken) throw new UnauthorizedException();
 
 		const payload = await this.authService.verifyToken(refreshToken, TokenType.REFRESH);

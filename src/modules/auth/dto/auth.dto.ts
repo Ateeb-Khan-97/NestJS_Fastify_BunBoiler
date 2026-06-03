@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, Length } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Length } from 'class-validator';
 
 export abstract class SigninDto {
 	@ApiProperty({
@@ -26,4 +26,16 @@ export abstract class SignupDto extends SigninDto {
 	@IsString()
 	@Length(2, 30)
 	fullName: string;
+}
+
+export abstract class RefreshAccessDto {
+	@ApiProperty({
+		example:
+			'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+		description: 'Refresh token',
+	})
+	@IsString()
+	@Length(100, 500)
+	@IsOptional()
+	refreshToken?: string;
 }
