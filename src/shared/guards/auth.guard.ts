@@ -5,7 +5,7 @@ import { AuthService } from '@/modules/auth/auth.service';
 import { TokenType } from '@/shared/enums/auth.enum';
 import type { FastifyRequest } from 'fastify';
 
-type FastifyRequestWithUser = FastifyRequest & { user: { id: number } };
+type FastifyRequestWithUser = FastifyRequest & { user: { id: string } };
 
 @Injectable()
 export class AuthGuard implements CanActivate {

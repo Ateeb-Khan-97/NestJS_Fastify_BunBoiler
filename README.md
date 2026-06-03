@@ -36,7 +36,7 @@ A high-performance boilerplate application built with [NestJS](https://nestjs.co
     ```bash
     cp .env.example .env
     ```
-    Update the `.env` file with your configuration. At minimum set `PG_URL` (and `PG_SSL=true` if your database requires TLS).
+    Update the `.env` file with your configuration. At minimum set `PG_URL` (append TLS params such as `?sslmode=require` to the URL if your database requires it).
 
 4.  Set up the database schema:
 
@@ -54,7 +54,7 @@ A high-performance boilerplate application built with [NestJS](https://nestjs.co
 
 ## Database (Prisma ORM)
 
-The schema lives in `prisma/schema.prisma`. The Migrate/CLI connection URL is read in `prisma.config.ts` (Prisma 7 no longer allows `url` in the schema's `datasource` block); it picks up `PG_URL` from your `.env` (appending `sslmode=require` when `PG_SSL=true`). After editing the schema, regenerate the client and apply changes:
+The schema lives in `prisma/schema.prisma`. The Migrate/CLI connection URL is read in `prisma.config.ts` (Prisma 7 no longer allows `url` in the schema's `datasource` block); it picks up `PG_URL` from your `.env` (include any TLS params like `?sslmode=require` directly in the URL). After editing the schema, regenerate the client and apply changes:
 
 ```bash
 bun run db:generate   # regenerate the typed client into src/generated/prisma

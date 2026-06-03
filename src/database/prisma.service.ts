@@ -13,7 +13,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 		const adapter = new PrismaPg({
 			connectionString: env.PG_URL,
 			max: 8,
-			...(env.PG_SSL === 'true' ? { ssl: { rejectUnauthorized: true } } : {}),
 		});
 
 		super({
