@@ -13,26 +13,12 @@ export class UserService {
 		private readonly commonService: CommonService,
 	) {}
 
-	private buildWhere(where: Partial<User>): Prisma.UserWhereInput {
-		const conditions: Prisma.UserWhereInput = { deletedAt: null };
-		for (const key of Object.keys(where) as (keyof User)[]) {
-			if (where[key] !== undefined) {
-				(conditions as Record<string, unknown>)[key] = where[key];
-			}
-		}
-		return conditions;
+	async findOneBy(where: Prisma.UserWhereInput): Promise<User | null> {
+		return this.prisma.user.findFirst({ where });
 	}
 
-	async findOneBy(where: Partial<User>): Promise<User | null> {
-		return this.prisma.user.findFirst({ where: this.buildWhere(where) });
-	}
-
-	async findBy(where: Partial<User>): Promise<User[]> {
-		return this.prisma.user.findMany({ where: this.buildWhere(where) });
-	}
-
-	create(user: Partial<User>): Partial<User> {
-		return user;
+	async findBy(where: Prisma.UserWhereInput): Promise<User[]> {
+		return this.prisma.user.findMany({ where });
 	}
 
 	async save(user: Partial<User>) {

@@ -1,4 +1,12 @@
-import { BadGatewayException, Body, Controller, Get, NotFoundException, Put } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Get,
+	InternalServerErrorException,
+	Logger,
+	NotFoundException,
+	Put,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CurrentUser } from '@/shared/decorators/current-user.decorator';
@@ -9,6 +17,8 @@ import { UserUpdateDto } from './dto/user.dto';
 @ApiTags('Users')
 @Controller('/api/users')
 export class UserController {
+	private readonly logger = new Logger(UserController.name);
+
 	constructor(
 		private readonly userService: UserService,
 		private readonly commonService: CommonService,
@@ -32,7 +42,10 @@ export class UserController {
 
 		const updateData = Object.assign(user, body);
 		const [error] = await this.userService.save(updateData);
-		if (error) throw new BadGatewayException('Failed to update user, Please try later');
+		if (error) {
+			this.logger.error(error.message);
+			throw new InternalServerErrorException('Failed to update user, Please try later');
+		}
 
 		return ResponseMapper.map({ message: 'User updated' });
 	}

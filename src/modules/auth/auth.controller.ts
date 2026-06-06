@@ -9,6 +9,7 @@ import {
 	UnauthorizedException,
 	Request,
 	Response,
+	InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from '@/shared/decorators/public.decorator';
@@ -50,11 +51,10 @@ export class AuthController {
 		if (emailCheck) throw new ConflictException('Email already registered');
 
 		body.password = await Bun.password.hash(body.password);
-		const user = this.userService.create(body);
-		const [error] = await this.userService.save(user);
+		const [error] = await this.userService.save(body);
 		if (error) {
 			this.logger.error(error.message);
-			throw new BadRequestException('Failed to register, Please try later');
+			throw new InternalServerErrorException('Failed to register, Please try later');
 		}
 
 		return ResponseMapper.map({
