@@ -19,7 +19,7 @@ import { UserService } from '../users/user.service';
 import { AuthService } from './auth.service';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { TokenType } from '@/shared/enums/auth.enum';
-import { env } from '@/config/env.config';
+import { CommonService } from '@/shared/services/common.service';
 
 @ApiTags('Auth')
 @Controller('/api/auth')
@@ -28,6 +28,7 @@ export class AuthController {
 	constructor(
 		private readonly userService: UserService,
 		private readonly authService: AuthService,
+		private readonly commonService: CommonService,
 	) {}
 
 	@Public()
@@ -39,9 +40,13 @@ export class AuthController {
 			throw new BadRequestException('Invalid credentials');
 
 		const [accessToken, refreshToken] = await this.authService.generateAuthTokens(user.id);
-		this.setAuthCookies(res, accessToken, refreshToken);
+		this.authService.setAuthCookies(res, accessToken, refreshToken);
+		const responseUser = this.commonService.omit(user, ['password', 'deletedAt']);
 
-		return ResponseMapper.map({ message: 'Signed in successfully' });
+		return ResponseMapper.map({
+			message: 'Signed in successfully',
+			data: { user: responseUser, accessToken, refreshToken },
+		});
 	}
 
 	@Public()
@@ -81,10 +86,17 @@ export class AuthController {
 		const user = await this.userService.findOneBy({ id: payload.userId });
 		if (!user) throw new UnauthorizedException();
 
-		const [accessToken, newRefreshToken] = await this.authService.generateAuthTokens(user.id);
-		this.setAuthCookies(res, accessToken, newRefreshToken);
+		const tokens = await this.authService.rotateAuthTokens(user.id, payload.tokenId);
+		if (!tokens) throw new UnauthorizedException();
 
-		return ResponseMapper.map({ message: 'Session refreshed' });
+		const [accessToken, newRefreshToken] = tokens;
+		this.authService.setAuthCookies(res, accessToken, newRefreshToken);
+		const responseUser = this.commonService.omit(user, ['password', 'deletedAt']);
+
+		return ResponseMapper.map({
+			message: 'Session refreshed',
+			data: { user: responseUser, accessToken, refreshToken: newRefreshToken },
+		});
 	}
 
 	@ApiBearerAuth('access-token')
@@ -96,23 +108,6 @@ export class AuthController {
 		await this.authService.revokeToken(token);
 		this.removeAuthCookies(res);
 		return ResponseMapper.map({ message: 'Signed out successfully' });
-	}
-
-	private setAuthCookies(res: FastifyReply, accessToken: string, refreshToken: string) {
-		res.setCookie(TokenType.REFRESH, refreshToken, {
-			httpOnly: true,
-			secure: true,
-			sameSite: 'strict',
-			path: '/',
-			maxAge: env.JWT_REFRESH_EXP,
-		});
-		res.setCookie(TokenType.ACCESS, accessToken, {
-			httpOnly: true,
-			secure: true,
-			sameSite: 'strict',
-			path: '/',
-			maxAge: env.JWT_ACCESS_EXP,
-		});
 	}
 
 	private removeAuthCookies(res: FastifyReply) {

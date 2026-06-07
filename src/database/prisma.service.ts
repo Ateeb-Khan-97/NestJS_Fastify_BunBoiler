@@ -8,22 +8,40 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 	private readonly logger = new Logger(PrismaService.name);
 
 	constructor() {
-		// Driver adapter — Prisma talks to Postgres through node-postgres (pg) instead
-		// of the bundled Rust engine, which the "client" engineType + Bun runtime need.
-		const adapter = new PrismaPg({
-			connectionString: env.PG_URL,
-			max: 8,
-		});
+		const adapter = new PrismaPg({ connectionString: env.PG_URL, max: 8 });
 
 		super({
 			adapter,
-			log: isProduction ? ['error'] : ['query', 'warn', 'error'],
+			log: isProduction
+				? [{ level: 'error', emit: 'event' }]
+				: [
+						{ level: 'query', emit: 'event' },
+						{ level: 'warn', emit: 'event' },
+						{ level: 'error', emit: 'event' },
+						{ level: 'info', emit: 'event' },
+					],
+		});
+
+		this.$on('query' as never, ({ query, params, duration }) => {
+			this.logger.debug(
+				`QUERY: ${(query as string).replaceAll(`"public".`, '')} - PARAMS: ${params} - +${(duration as number).toFixed(2)}ms`,
+			);
+		});
+
+		this.$on('error' as never, ({ error }) => {
+			this.logger.error('ERROR:', error);
+		});
+
+		this.$on('info' as never, ({ message }) => {
+			this.logger.log('INFO:', message);
+		});
+
+		this.$on('warn' as never, ({ message }) => {
+			this.logger.warn('WARN:', message);
 		});
 	}
 
 	async onModuleInit() {
-		// Fail fast: verify the connection during startup so a misconfigured database
-		// surfaces immediately instead of on the first request.
 		try {
 			await this.$connect();
 			this.logger.log('Database connected');

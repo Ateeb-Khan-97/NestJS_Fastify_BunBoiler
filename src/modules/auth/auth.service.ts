@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { JwtService, type JwtSignOptions, type JwtVerifyOptions } from '@nestjs/jwt';
 import { TokenType } from '@/shared/enums/auth.enum';
 import { env } from '@/config/env.config';
-import type { FastifyRequest } from 'fastify';
+import { SessionService } from './session.service';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +17,10 @@ export class AuthService {
 		return this.blockedTokens.has(tokenId);
 	}
 
-	constructor(private readonly jwtService: JwtService) {}
+	constructor(
+		private readonly jwtService: JwtService,
+		private readonly sessionService: SessionService,
+	) {}
 	private readonly JWT_SECRET: Record<TokenType, string> = {
 		[TokenType.ACCESS]: env.JWT_ACCESS_SECRET,
 		[TokenType.REFRESH]: env.JWT_REFRESH_SECRET,
@@ -28,6 +32,24 @@ export class AuthService {
 
 	public async generateAuthTokens(userId: string) {
 		const tokenId = Bun.randomUUIDv7();
+		await this.sessionService.create(userId, tokenId);
+		return this.issueTokens(userId, tokenId);
+	}
+
+	/**
+	 * Rotate an existing session into a fresh token pair. Only succeeds if the
+	 * incoming `tokenId` is still an active session; otherwise returns undefined
+	 * (replayed/revoked refresh token). The old session is removed and a new one
+	 * stored as part of the rotation.
+	 */
+	public async rotateAuthTokens(userId: string, oldTokenId: string) {
+		const newTokenId = Bun.randomUUIDv7();
+		const rotated = await this.sessionService.rotate(oldTokenId, userId, newTokenId);
+		if (!rotated) return undefined;
+		return this.issueTokens(userId, newTokenId);
+	}
+
+	private async issueTokens(userId: string, tokenId: string) {
 		return Promise.all([
 			this.signPayload({ userId, tokenId }, TokenType.ACCESS),
 			this.signPayload({ userId, tokenId }, TokenType.REFRESH),
@@ -59,6 +81,26 @@ export class AuthService {
 
 	public async revokeToken(token: string): Promise<void> {
 		const payload = await this.jwtService.decode(token);
-		if (payload?.tokenId) this.addBlockedToken(payload.tokenId);
+		if (payload?.tokenId) {
+			this.addBlockedToken(payload.tokenId);
+			await this.sessionService.delete(payload.tokenId);
+		}
+	}
+
+	public setAuthCookies(res: FastifyReply, accessToken: string, refreshToken: string): void {
+		res.setCookie(TokenType.REFRESH, refreshToken, {
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			path: '/',
+			maxAge: env.JWT_REFRESH_EXP,
+		});
+		res.setCookie(TokenType.ACCESS, accessToken, {
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			path: '/',
+			maxAge: env.JWT_ACCESS_EXP,
+		});
 	}
 }
