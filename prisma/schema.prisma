@@ -28,6 +28,7 @@ model Session {
   updatedAt DateTime @default(now()) @updatedAt
   tokenId   String   @unique
   userId    String
+  expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
