@@ -6,7 +6,7 @@
 	"scripts": {
 		"build": "bun ./scripts/build.ts",
 		"dev": "bun --watch src/main.ts",
-		"start": "bun ./dist/main.js",
+		"start": "./dist/server",
 		"format": "bunx biome format --write ./src",
 		"lint": "bunx biome check ./src",
 		"prepare": "husky",
