@@ -2,8 +2,15 @@ FROM oven/bun:1-alpine
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json bun.lock ./
+# Skip husky git hooks during container install
+ENV HUSKY=0
+
+# Prisma schema + config must be present before install,
+# since `postinstall` runs `prisma generate`.
+COPY package.json bun.lock prisma.config.ts ./
+COPY ./prisma ./prisma
+
+# Install dependencies (also generates the Prisma client via postinstall)
 RUN bun install
 
 # Copy source files
@@ -27,4 +34,4 @@ EXPOSE 5000
 ENV NODE_ENV=development
 
 # Start development server with hot reload
-CMD ["bun", "--watch", "src/index.ts"]
+CMD ["bun", "--watch", "src/main.ts"]
