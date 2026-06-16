@@ -43,7 +43,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
 	async onModuleInit() {
 		try {
-			await this.$connect();
+			await this.$queryRawUnsafe('SELECT 1'); // Test the database connection
 			this.logger.log('Database connected');
 		} catch (err) {
 			this.logger.error('Database connection failed', err instanceof Error ? err.message : String(err));
